@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrator Dashboard – CareerCompass</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .admin-header {
+      background: var(--pure-white);
+      border-bottom: 1.5px solid var(--border-color);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .admin-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .admin-badge {
+      display: inline-block;
+      background: var(--forest-green);
+      color: var(--pure-white);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.05em;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .kpi-card {
+      background: var(--pure-white);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--border-color);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--forest-green);
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+    .kpi-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--warm-brown);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .student-table-container {
+      background: var(--pure-white);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    .student-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .student-table th {
+      background: #F4F8F3;
+      color: var(--forest-green-dark);
+      font-weight: 700;
+      padding: 14px 16px;
+      border-bottom: 2px solid var(--light-sage);
+      white-space: nowrap;
+    }
+    .student-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--light-sage);
+      color: var(--text-dark);
+      vertical-align: middle;
+    }
+    .student-table tr:hover {
+      background: #FAFDF9;
+    }
+    .search-box {
+      width: 100%;
+      max-width: 380px;
+      padding: 10px 16px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid var(--border-color);
+      font-size: 0.9rem;
+      background: var(--pure-white);
+      outline: none;
+      transition: var(--transition);
+    }
+    .search-box:focus {
+      border-color: var(--forest-green);
+      box-shadow: 0 0 0 3px rgba(53, 91, 76, 0.15);
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--pure-white);
+      border-radius: var(--radius-lg);
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+      border: 2px solid var(--light-sage);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--warm-brown);
+    }
+  </style>
+</head>
+<body style="background-color: var(--warm-cream); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Admin Header -->
+  <header class="admin-header">
+    <div class="container admin-nav">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="{{ url_for('admin_dashboard') }}" class="brand-logo">
+          <svg class="brand-icon" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span>CareerCompass</span>
+        </a>
+        <span class="admin-badge">Admin Portal</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <a href="{{ url_for('index') }}" target="_blank" class="btn btn-outline btn-sm">
+          Visit Student Portal &nearr;
+        </a>
+        <a href="{{ url_for('admin_export_students') }}" class="btn btn-primary btn-sm">
+          &DownArrowBar; Export to CSV
+        </a>
+        <form action="{{ url_for('admin_logout') }}" method="POST" style="display:inline; margin: 0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline btn-sm" style="color: #C62828; border-color: #EF9A9A;">
+            Sign Out
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container" style="flex: 1; padding: 24px 16px 48px;">
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Top KPI Overview Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Registered Students</div>
+        <div class="kpi-num">{{ total_students }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+          Active accounts in database
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Assessments Completed</div>
+        <div class="kpi-num">{{ total_assessments }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+          Diagnostic test evaluations
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Supabase Cloud Sync</div>
+        <div style="margin-top: 8px;">
+          {% if supabase_status.status == 'connected' %}
+            <span class="dash-pill pill-strong" style="font-size: 0.95rem;">
+              &check; Connected &amp; Synced
+            </span>
+          {% else %}
+            <span class="dash-pill pill-dev" style="font-size: 0.95rem;">
+              &bull; Connected (Schema Ready)
+            </span>
+          {% endif %}
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; font-family: monospace;">
+          Project: {{ supabase_status.project_id }}
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Top Recommended Domain</div>
+        {% if domains_distribution %}
+          {% set top_domain = domains_distribution.items()|sort(attribute='1', reverse=True)|first %}
+          <div style="font-size: 1.25rem; font-weight: 800; color: var(--forest-green); margin-top: 6px;">
+            {{ top_domain[0] }}
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+            {{ top_domain[1] }} student matches
+          </div>
+        {% else %}
+          <div style="font-size: 1.1rem; color: var(--text-muted); margin-top: 8px;">
+            Awaiting assessments
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Student Table Section -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h3 style="font-size: 1.4rem; color: var(--forest-green); font-weight: 800; margin: 0;">
+          Student Directory &amp; Performance Tracker
+        </h3>
+        <p style="font-size: 0.88rem; color: var(--warm-brown); margin-top: 2px;">
+          Showing all {{ total_students }} registered students across all colleges and engineering branches.
+        </p>
+      </div>
+
+      <div>
+        <input type="text"
+               id="studentSearch"
+               class="search-box"
+               placeholder="🔍 Search student name, email, college, or domain..."
+               onkeyup="filterStudentTable()">
+      </div>
+    </div>
+
+    <div class="student-table-container">
+      <table class="student-table" id="studentTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Student Name</th>
+            <th>Email</th>
+            <th>College</th>
+            <th>Branch &amp; Year</th>
+            <th>Assessment Result</th>
+            <th>Roadmap Tasks</th>
+            <th>Registered</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if students %}
+            {% for s in students %}
+              <tr class="student-row">
+                <td style="font-weight: 700; color: var(--forest-green);">#{{ s.id }}</td>
+                <td>
+                  <strong style="color: var(--text-dark); font-size: 0.95rem;">{{ s.full_name }}</strong>
+                </td>
+                <td style="color: var(--warm-brown); font-family: monospace; font-size: 0.85rem;">
+                  {{ s.email }}
+                </td>
+                <td>{{ s.college_name or '—' }}</td>
+                <td>
+                  <div style="font-weight: 600;">{{ s.branch or '—' }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">{{ s.academic_year or '' }}</div>
+                </td>
+                <td>
+                  {% if s.score_total is not none %}
+                    <span class="dash-pill {{ s.badge_class }}">
+                      {{ s.score_total }}/25 ({{ s.percentage_total }}%) &bull; {{ s.proficiency_level }}
+                    </span>
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--forest-green); margin-top: 4px;">
+                      {{ career_domains.get(s.recommended_career, {}).get('title', s.recommended_career) }}
+                    </div>
+                  {% else %}
+                    <span class="dash-pill pill-beg" style="color: var(--text-muted); background: #F5F5F5;">
+                      Assessment Pending
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span style="font-weight: 700; color: var(--forest-green);">{{ s.completed_tasks_count }}</span> tasks done
+                </td>
+                <td style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">
+                  {{ s.created_at[:10] if s.created_at else '—' }}
+                </td>
+                <td style="white-space: nowrap;">
+                  <button type="button"
+                          class="btn btn-outline btn-sm"
+                          onclick="openStudentModal({{ s.id }})"
+                          style="padding: 4px 10px; font-size: 0.8rem;">
+                    View Profile
+                  </button>
+                  <button type="button"
+                          class="btn btn-outline btn-sm"
+                          onclick="openResetModal({{ s.id }}, '{{ s.full_name }}')"
+                          style="padding: 4px 10px; font-size: 0.8rem; margin-left: 4px;">
+                    Reset PW
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                No student accounts registered yet. Students can register through the main portal.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Student Profile Detail Modal -->
+  <div id="studentDetailModal" class="modal-overlay">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeStudentModal()">&times;</button>
+      <div id="studentDetailContent">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div id="resetPasswordModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px;">
+      <button class="modal-close" onclick="closeResetModal()">&times;</button>
+      <h3 style="color: var(--forest-green); font-size: 1.3rem; margin-bottom: 4px;">
+        Reset Student Password
+      </h3>
+      <p id="resetModalSubtitle" style="font-size: 0.85rem; color: var(--warm-brown); margin-bottom: 16px;">
+        Set a new secure password for this student.
+      </p>
+
+      <form id="resetPasswordForm" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label for="new_password" class="form-label">New Password (min. 8 characters)</label>
+          <input type="text"
+                 id="new_password"
+                 name="new_password"
+                 class="form-input"
+                 value="Student@123"
+                 required>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">
+            Pre-filled with temporary password: <code>Student@123</code>
+          </span>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; margin-top: 12px;">
+          Update Student Password &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hidden Embedded Student JSON Data for Modals -->
+  <script id="studentsJsonData" type="application/json">
+    {{ students | tojson }}
+  </script>
+
+  <script>
+    // Real-time table filter
+    function filterStudentTable() {
+      const q = document.getElementById('studentSearch').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('.student-row');
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    // Modal data handling
+    const rawDataEl = document.getElementById('studentsJsonData');
+    const allStudents = rawDataEl ? JSON.parse(rawDataEl.textContent || '[]') : [];
+    const studentsMap = {};
+    allStudents.forEach(s => { studentsMap[s.id] = s; });
+
+    function openStudentModal(id) {
+      const s = studentsMap[id];
+      if (!s) return;
+
+      const skillsHtml = (s.skills_list && s.skills_list.length > 0)
+        ? s.skills_list.map(sk => `<span class="skill-tag">${sk}</span>`).join(' ')
+        : '<em style="color: var(--text-muted);">None specified</em>';
+
+      const interestsHtml = (s.interests_list && s.interests_list.length > 0)
+        ? s.interests_list.map(it => `<span class="skill-tag" style="background:#FFF9E9; border-color:#F7DF91; color:#8D6E00;">${it}</span>`).join(' ')
+        : '<em style="color: var(--text-muted);">None specified</em>';
+
+      let scoresHtml = '';
+      if (s.domain_scores && Object.keys(s.domain_scores).length > 0) {
+        scoresHtml = `
+          <div style="margin-top: 16px;">
+            <h5 style="color: var(--forest-green); margin-bottom: 8px;">Domain Aptitude Breakdown:</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem;">
+              ${Object.entries(s.domain_scores).map(([k, sc]) => `
+                <div style="background: var(--light-sage); padding: 8px 12px; border-radius: var(--radius-sm);">
+                  <strong>${sc.title || k}:</strong> ${sc.score}/5 (${sc.percentage}%)
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('studentDetailContent').innerHTML = `
+        <span class="section-tag">Student Record #${s.id}</span>
+        <h3 style="color: var(--forest-green); font-size: 1.5rem; margin: 6px 0 2px;">${s.full_name}</h3>
+        <p style="color: var(--warm-brown); font-size: 0.9rem; margin-bottom: 16px;">
+          ${s.email} &bull; ${s.college_name || 'College not listed'}
+        </p>
+
+        <div style="background: #F9FCF8; padding: 14px 18px; border-radius: var(--radius-md); border: 1px solid var(--light-sage); font-size: 0.88rem; line-height: 1.6;">
+          <div><strong>Branch:</strong> ${s.branch || '—'}</div>
+          <div><strong>Academic Year:</strong> ${s.academic_year || '—'}</div>
+          <div><strong>Registered On:</strong> ${s.created_at ? s.created_at.replace('T', ' ').substring(0, 19) + ' UTC' : '—'}</div>
+          <div><strong>Roadmap Tasks Completed:</strong> ${s.completed_tasks_count} tasks</div>
+        </div>
+
+        <div style="margin-top: 18px;">
+          <h5 style="color: var(--forest-green); margin-bottom: 6px;">Technical Skills Selected:</h5>
+          <div>${skillsHtml}</div>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <h5 style="color: var(--forest-green); margin-bottom: 6px;">Areas of Interest:</h5>
+          <div>${interestsHtml}</div>
+        </div>
+
+        ${scoresHtml}
+
+        <div style="margin-top: 24px; text-align: right;">
+          <button class="btn btn-primary btn-sm" onclick="closeStudentModal()">Done</button>
+        </div>
+      `;
+
+      document.getElementById('studentDetailModal').classList.add('active');
+    }
+
+    function closeStudentModal() {
+      document.getElementById('studentDetailModal').classList.remove('active');
+    }
+
+    function openResetModal(id, name) {
+      document.getElementById('resetModalSubtitle').textContent = `Set a new password for ${name} (Student #${id})`;
+      document.getElementById('resetPasswordForm').action = `/admin/student/${id}/reset-password`;
+      document.getElementById('resetPasswordModal').classList.add('active');
+    }
+
+    function closeResetModal() {
+      document.getElementById('resetPasswordModal').classList.remove('active');
+    }
+
+    // Close on overlay click
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal-overlay')) {
+        event.target.classList.remove('active');
+      }
+    };
+  </script>
+
+</body>
+</html>
